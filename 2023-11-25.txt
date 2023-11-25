@@ -1,0 +1,5 @@
+shakai:0, rika:25, kokugo:3, suugaku:15
+0
+25
+3
+15
