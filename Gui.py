@@ -3,9 +3,9 @@ from pygame.locals import *
 import cv2
 #initialise
 pygame.init()
-monitor_size = [pygame.display.Info().current_w, pygame.display.Info().current_h]
+monitor_size = [pygame.display.Info().current_w -100, pygame.display.Info().current_h-100]
 mainClock = pygame.time.Clock()
-DEFAULT_FONT = r"Zen_Old_Mincho\ZenOldMincho-Medium.ttf"
+DEFAULT_FONT = r"Zen_Old_Mincho/ZenOldMincho-Medium.ttf"
 
 #ウィンドウの作成
 
@@ -14,7 +14,7 @@ def create_window(width, height,background_colour,caption):
     WIDTH = width
     HEIGHT = height
     window_colour = background_colour
-    display = pygame.display.set_mode((WIDTH, HEIGHT), pygame.HWSURFACE | pygame.DOUBLEBUF |pygame.FULLSCREEN)
+    display = pygame.display.set_mode((WIDTH, HEIGHT), )
     screen = pygame.Surface((width, height))
     pygame.display.set_caption(str(caption))
     #screen.fill(background_colour)

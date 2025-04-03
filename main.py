@@ -2,6 +2,7 @@ import Gui
 import pygame, sys 
 from pygame import *
 import time
+import random
 from datetime import date,timedelta
 
 Gui.create_window(Gui.monitor_size[0],Gui.monitor_size[1],(255,255,255),"Time keeper")
@@ -24,10 +25,27 @@ shakai_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],LEFT[0],MID
 rika_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],MIDDLE_LEFT[0],MIDDLE_LEFT[1],BUTTON_COLORS,text="rika start",fontsize=50,text_offset_x=50,text_offset_y=-20)
 kokugo_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],MIDDLE_RIGHT[0],MIDDLE_LEFT[1],BUTTON_COLORS,text="kokugo start",fontsize=50,text_offset_x=20,text_offset_y=-20)
 suugaku_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],RIGHT[0],MIDDLE_LEFT[1],BUTTON_COLORS,text="suugaku start",fontsize=50,text_offset_x=10,text_offset_y=-20)
-end_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],MIDDLE_LEFT[0] + 100,MIDDLE_LEFT[1]+100,BUTTON_COLORS,text="End",fontsize=50,text_offset_x=150,text_offset_y=-20)
+end_button = Gui.Button(BUTTON_DIMENSIONS[0],BUTTON_DIMENSIONS[1],MIDDLE_LEFT[0] + 100,MIDDLE_LEFT[1],BUTTON_COLORS,text="End",fontsize=50,text_offset_x=150,text_offset_y=-20)
 current_context =  "select menu"
 timer_type = None
 start = 0
+r_num = random.randint(0,2)
+if r_num == 1:
+    r = random.randint(0,255)
+    g = 255 - r
+    b = random.randint(0,255)
+elif r_num == 2:
+    g = random.randint(0,255)
+    b = 255 - g
+    r = random.randint(0,255)
+else:
+    b = random.randint(0,255)
+    r = 255 - b
+    g = random.randint(0,255)
+change_time = time.time()
+target_color = (r,g,b)
+pygame.mixer.music.load("music.mp3")
+pygame.mixer.music.play(loops= -1)
 
 def convert_string(num):
     hours = 0
@@ -105,9 +123,14 @@ def event_listen():
     surf = pygame.transform.scale(Gui.screen,(Gui.monitor_size))
     Gui.display.blit(surf,(0,0))
     pygame.display.update()
-        
+
+def change_over_time(end_color,start_time):
+    current_color = (255,255,255)
+    current_color = (int((end_color[0] / 60)*abs(time.time()-start_time)),int((end_color[1] / 60)*abs(time.time() -start_time)),int((end_color[2] / 60)*abs(time.time() -start_time)))
+    print(current_color)
+    return current_color
 def drawtoScreen():
-    global current_context, shakai_time,rika_time,kokugo_time,suugaku_time,start,timer_type
+    global current_context, shakai_time,rika_time,kokugo_time,suugaku_time,start,timer_type,change_time,target_color,loop_time
     Gui.screen.fill((255,255,255)) 
     if current_context == "select menu":
         shakai_frame = Gui.buy_frame(LEFT[0], LEFT[1], BUTTON_COLORS, f"shakai day: {convert_string(shakai_time)}", f"shakai week: {convert_string(week_study_time[0])}", "image.png")
@@ -131,41 +154,63 @@ def drawtoScreen():
             current_context = "timer_screen"
             rika_button.clicked = False
             start = time.time()
+            loop_time = 1
         if shakai_button.clicked:
             timer_type = "shakai"
             current_context = "timer_screen"
             start = time.time()
             shakai_button.clicked = False
+            loop_time = 1
         if kokugo_button.clicked:
             timer_type = "kokugo"
             current_context = "timer_screen"
             start = time.time()
             kokugo_button.clicked = False
+            loop_time = 1
         if suugaku_button.clicked:
             timer_type = "suugaku"
             current_context = "timer_screen"
             start = time.time()
             suugaku_button.clicked = False
+            loop_time = 1
     if current_context == "timer_screen":
-        Gui.screen.fill((255,255,255)) 
         end_button.draw()
         end_button.check_clicks()
         current = time.time()
         sum_time = int(current - start)
-        print(sum_time)
+        if (sum_time % 60) == 0 :
+            r_num = random.randint(0,2)
+            if r_num == 1:
+                r = random.randint(0,255)
+                g = 255 - r
+                b = random.randint(0,255)
+            elif r_num == 2:
+                g = random.randint(0,255)
+                b = 255 - g
+                r = random.randint(0,255)
+            else:
+                b = random.randint(0,255)
+                r = 255 - b
+                g = random.randint(0,255)
+
+            target_color = (r,g,b)
+            change_time = current
+        print(target_color)
+        Gui.screen.fill(change_over_time(target_color,change_time)) 
+        text_color = (255 - change_over_time(target_color,change_time)[0],255 - change_over_time(target_color,change_time)[1],255-change_over_time(target_color,change_time)[2])
         if timer_type == "rika":
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(rika_time + sum_time)}")
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[1] + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(rika_time + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[1] + sum_time)}")
         if timer_type == "shakai":
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(shakai_time + sum_time)}")
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[0] + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(shakai_time + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[0] + sum_time)}")
         if timer_type == "suugaku":
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(suugaku_time + sum_time)}")
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[3] + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(suugaku_time + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[3] + sum_time)}")
         if timer_type == "kokugo":
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(kokugo_time + sum_time)}")
-            Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[2] + sum_time)}")
-        Gui.create_center_text(Gui.DEFAULT_FONT,100,(0,0,0),Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 -100,f"study session:{convert_string(sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 ,f"Day time:{convert_string(kokugo_time + sum_time)}")
+            Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 +100,f"week time:{convert_string(week_study_time[2] + sum_time)}")
+        Gui.create_center_text(Gui.DEFAULT_FONT,100,text_color,Gui.monitor_size[0]/2,Gui.monitor_size[1]/2 -100,f"study session:{convert_string(sum_time)}")
 
         if end_button.clicked == True:
             if timer_type == "rika":
